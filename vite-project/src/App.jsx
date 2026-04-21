@@ -2381,7 +2381,7 @@ function CNNView({ onNavigate }) {
 
 function MLPView({ onNavigate }) {
   const [lr, setLr] = useState(0.01);
-  const [epochs, setEpochs] = useState(100);
+  const [epochs, setEpochs] = useState(10);
   const [hiddenLayers, setHiddenLayers] = useState("16, 8");
 
   const [loading, setLoading] = useState(false);
