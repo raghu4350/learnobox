@@ -2532,19 +2532,18 @@ function MLPView({ onNavigate }) {
           <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-xl font-bold text-slate-900">1. How it Works (Theory)</h2>
             <p className="mb-4 text-sm text-slate-600">
-              <strong>What is a CNN?</strong> A Convolutional Neural Network (CNN) is a deep learning model designed to recognize visual patterns. It learns spatial features like edges, textures and shapes directly from pixel data.
+              <strong>What is an MLP?</strong> A Multi-Layer Perceptron uses stacked layers of neurons to learn complex non-linear patterns from data — going beyond simple linear separation.
             </p>
-            <h3 className="mb-2 font-semibold text-slate-800">This model classifies: 🐶 Dog vs 🐱 Cat</h3>
-            <p className="mb-3 text-sm text-slate-600">Trained on <strong>CIFAR-10</strong> — 60,000 real-world images. We use only the <strong>Cat (class 3)</strong> and <strong>Dog (class 5)</strong> subsets.</p>
+            <h3 className="mb-2 font-semibold text-slate-800">Workflow:</h3>
             <ul className="mb-4 list-inside list-disc text-sm text-slate-600 space-y-1">
-              <li><strong>1. Conv Layer:</strong> Scans images with learned filters — detects fur, ears, snouts.</li>
-              <li><strong>2. MaxPooling:</strong> Shrinks feature maps, keeping only strongest activations.</li>
-              <li><strong>3. Dropout:</strong> Randomly zeros neurons during training to prevent overfitting.</li>
-              <li><strong>4. Flatten + Dense:</strong> Converts 2D maps to 1D for final classification.</li>
-              <li><strong>5. Output (Softmax):</strong> Returns probability of Cat 🐱 vs Dog 🐶.</li>
+              <li><strong>1. Input Layer:</strong> Receives features (Study Hours, Attendance %).</li>
+              <li><strong>2. Hidden Layers:</strong> Dense layers with ReLU activation learn non-linear patterns.</li>
+              <li><strong>3. Backpropagation:</strong> Computes gradients and updates weights to minimize loss.</li>
+              <li><strong>4. Output Layer:</strong> Sigmoid activation outputs pass/fail probability.</li>
+              <li><strong>5. Loss &amp; Accuracy:</strong> Binary cross-entropy tracks training progress.</li>
             </ul>
-             <p className="text-sm text-slate-600 mt-4">
-              Draw or upload any 32×32 image. After training, the model predicts whether it sees a Dog 🐶 or a Cat 🐱!
+            <p className="text-sm text-slate-600 mt-4">
+              Upload any CSV with 2 numeric feature columns + 1 binary label column (0/1) to train on your own data!
             </p>
           </section>
 
@@ -2561,9 +2560,9 @@ function MLPView({ onNavigate }) {
                 <thead className="bg-slate-50 text-slate-700 sticky top-0">
                   <tr>
                     <th className="px-3 py-2 font-semibold text-slate-400 w-8">#</th>
-                    <th className="px-4 py-2 font-semibold">Pixel Width</th>
-                    <th className="px-4 py-2 font-semibold">Pixel Height</th>
-                    <th className="px-4 py-2 font-semibold">Class</th>
+                    <th className="px-4 py-2 font-semibold">Study Hours</th>
+                    <th className="px-4 py-2 font-semibold">Attendance %</th>
+                    <th className="px-4 py-2 font-semibold">Pass? (1/0)</th>
                   </tr>
                 </thead>
                 <tbody>
