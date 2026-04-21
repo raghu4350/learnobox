@@ -1,486 +1,3 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-
-const models = [
-  {
-    name: 'Perceptron',
-    description:
-      'The simplest neural unit: weighted inputs, bias, and a step or activation output.',
-    difficulty: 'Beginner',
-    difficultyClass:
-      'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/80',
-    icon: 'blur_on',
-  },
-  {
-    name: 'Multi-Layer Perceptron (MLP)',
-    description:
-      'Stacked layers of neurons that learn non-linear decision boundaries.',
-    difficulty: 'Beginner',
-    difficultyClass:
-      'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200/80',
-    icon: 'account_tree',
-  },
-  {
-    name: 'Convolutional Neural Network (CNN)',
-    description:
-      'Spatial filters and pooling for images, video, and grid-like data.',
-    difficulty: 'Intermediate',
-    difficultyClass:
-      'bg-amber-50 text-amber-800 ring-1 ring-amber-200/80',
-    icon: 'grid_view',
-  },
-  {
-    name: 'Recurrent Neural Network (RNN)',
-    description:
-      'Hidden state over sequences—ideal for time series and ordered inputs.',
-    difficulty: 'Intermediate',
-    difficultyClass:
-      'bg-amber-50 text-amber-800 ring-1 ring-amber-200/80',
-    icon: 'repeat',
-  },
-  {
-    name: 'Long Short-Term Memory (LSTM)',
-    description:
-      'Gated memory cells that capture long-range dependencies in sequences.',
-    difficulty: 'Advanced',
-    difficultyClass: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200/80',
-    icon: 'memory',
-  },
-  {
-    name: 'Hopfield Network',
-    description:
-      'Associative memory via energy minimization and recurrent symmetric weights.',
-    difficulty: 'Advanced',
-    difficultyClass: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200/80',
-    icon: 'hub',
-  },
-]
-
-const pathSteps = [
-  { step: 1, title: 'Basics', detail: 'Neurons, weights, and activations' },
-  {
-    step: 2,
-    title: 'Forward Propagation',
-    detail: 'How signals flow layer to layer',
-  },
-  {
-    step: 3,
-    title: 'Backpropagation',
-    detail: 'Gradients and learning from error',
-  },
-  { step: 4, title: 'Advanced Models', detail: 'CNNs, RNNs, and beyond' },
-]
-
-const fontStyle = { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' }
-
-function MainNav({ active, onNavigate, searchPlaceholder }) {
-  const tabClass = (view) =>
-    active === view
-      ? 'border-b-2 border-purple-600 pb-0.5 text-slate-700'
-      : 'transition-colors hover:text-slate-700'
-
-  return (
-    <header className="sticky top-0 z-50 border-b border-slate-200/70 bg-white/75 shadow-sm shadow-slate-200/40 backdrop-blur-md">
-      <div className="mx-auto max-w-7xl px-6 py-3.5 lg:px-8">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={() => onNavigate('home')}
-            className="shrink-0 text-left text-xl font-bold tracking-tight"
-          >
-            <span className="text-slate-900">Learno</span>
-            <span className="text-purple-600">box</span>
-          </button>
-
-          <nav className="order-3 flex w-full flex-wrap items-center justify-center gap-6 text-sm font-medium text-slate-500 md:order-none md:flex-1 md:justify-center lg:w-auto">
-            <button
-              type="button"
-              onClick={() => onNavigate('home')}
-              className={tabClass('home')}
-            >
-              Home
-            </button>
-            <button
-              type="button"
-              onClick={() => onNavigate('learn')}
-              className={tabClass('learn')}
-            >
-              Learn
-            </button>
-          </nav>
-
-          <div className="flex shrink-0 items-center gap-3">
-            <label className="relative hidden lg:block">
-              <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-                <span className="material-symbols-outlined text-[20px]">
-                  search
-                </span>
-              </span>
-              <input
-                type="search"
-                placeholder={searchPlaceholder}
-                className="w-56 rounded-full border border-slate-200/90 bg-slate-100/80 py-2 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 shadow-inner shadow-white/50 outline-none transition focus:border-purple-300 focus:ring-2 focus:ring-purple-500/20"
-              />
-            </label>
-            <button
-              type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200/80 bg-white/80 text-slate-500 shadow-sm transition hover:border-slate-300 hover:shadow-md"
-              aria-label="Profile"
-            >
-              <span className="material-symbols-outlined text-[22px]">
-                person
-              </span>
-            </button>
-          </div>
-        </div>
-
-        <label className="relative mt-3 lg:hidden">
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
-            <span className="material-symbols-outlined text-[20px]">
-              search
-            </span>
-          </span>
-          <input
-            type="search"
-            placeholder={searchPlaceholder}
-            className="w-full rounded-full border border-slate-200/90 bg-slate-100/80 py-2.5 pl-10 pr-4 text-sm text-slate-700 placeholder:text-slate-400 shadow-inner outline-none transition focus:border-purple-300 focus:ring-2 focus:ring-purple-500/20"
-          />
-        </label>
-      </div>
-    </header>
-  )
-}
-
-function AppFooter() {
-  return (
-    <footer className="mt-auto border-t border-slate-200 bg-slate-50/80">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-8 text-sm text-slate-500 md:flex-row md:items-center md:justify-between lg:px-8">
-        <div>
-          <p className="font-bold text-slate-900">Learnobox</p>
-          <p className="mt-1 text-xs leading-relaxed">
-            © 2024 Learnobox Archive. Designed for intellectual breathing room.
-          </p>
-        </div>
-        <nav className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
-          <a href="#" className="hover:text-slate-700">
-            Privacy
-          </a>
-          <a href="#" className="hover:text-slate-700">
-            Terms
-          </a>
-          <a href="#" className="hover:text-slate-700">
-            Support
-          </a>
-          <a href="#" className="hover:text-slate-700">
-            Documentation
-          </a>
-        </nav>
-      </div>
-    </footer>
-  )
-}
-
-function HomeView({ onNavigate }) {
-  return (
-    <div
-      className="flex min-h-screen flex-col bg-slate-50 text-slate-800 antialiased"
-      style={fontStyle}
-    >
-      <MainNav
-        active="home"
-        onNavigate={onNavigate}
-        searchPlaceholder="Search..."
-      />
-
-      <main className="mx-auto max-w-6xl flex-1 px-6 pb-16 pt-12 lg:px-8 lg:pt-16">
-        <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-slate-100/90 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-          <span
-            className="h-1.5 w-1.5 shrink-0 rounded-full bg-purple-600"
-            aria-hidden
-          />
-          <span>NEW: VISUALIZING TRANSFORMERS</span>
-        </div>
-        <h1 className="mb-3 text-4xl font-bold tracking-tight text-slate-900 md:text-5xl lg:text-6xl">
-          Learnobox
-        </h1>
-        <p className="mb-12 max-w-2xl text-lg text-slate-600 md:text-xl">
-          Learn and Visualize AI Models Interactively
-        </p>
-
-        <div className="mb-16 grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-10">
-          <article className="relative overflow-hidden rounded-2xl bg-white p-8 shadow-md shadow-slate-200/50 ring-1 ring-slate-100">
-            <span
-              className="material-symbols-outlined pointer-events-none absolute -right-2 -top-2 text-[140px] leading-none text-slate-100"
-              aria-hidden
-            >
-              bookmark
-            </span>
-            <div className="relative">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-purple-600">
-                <span className="material-symbols-outlined text-[26px]">
-                  menu_book
-                </span>
-              </div>
-              <h2 className="mb-3 text-xl font-bold text-slate-900">
-                Learn Neural Networks
-              </h2>
-              <p className="mb-8 text-[15px] leading-relaxed text-slate-600">
-                Deep dive into activation functions and architectures. Master the
-                mathematics behind backpropagation through interactive
-                visualizations.
-              </p>
-              <button
-                type="button"
-                onClick={() => onNavigate('learn')}
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-purple-600/25 transition-opacity hover:opacity-95"
-              >
-                Get Started
-                <span className="material-symbols-outlined text-[18px]">
-                  arrow_forward
-                </span>
-              </button>
-            </div>
-          </article>
-
-          <article className="relative overflow-hidden rounded-2xl bg-white p-8 shadow-md shadow-slate-200/50 ring-1 ring-slate-100">
-            <span
-              className="material-symbols-outlined pointer-events-none absolute -right-2 -top-2 text-[140px] leading-none text-slate-100"
-              aria-hidden
-            >
-              terminal
-            </span>
-            <div className="relative">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-purple-600">
-                <span className="material-symbols-outlined text-[26px]">
-                  hub
-                </span>
-              </div>
-              <h2 className="mb-3 text-xl font-bold text-slate-900">
-                Explore architectures
-              </h2>
-              <p className="mb-8 text-[15px] leading-relaxed text-slate-600">
-                Browse perceptrons, CNNs, RNNs, and more—structured lessons and
-                visual highlights in one place.
-              </p>
-              <button
-                type="button"
-                onClick={() => onNavigate('learn')}
-                className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-purple-600/25 transition-opacity hover:opacity-95"
-              >
-                View topics
-                <span className="material-symbols-outlined text-[18px]">
-                  arrow_forward
-                </span>
-              </button>
-            </div>
-          </article>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
-          <div className="flex flex-col gap-5 rounded-2xl bg-slate-100/90 p-6 ring-1 ring-slate-200/60 sm:flex-row sm:items-stretch md:p-7">
-            <div
-              className="relative h-36 w-full shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 sm:h-auto sm:w-44"
-              aria-hidden
-            >
-              <div className="absolute inset-0 opacity-80">
-                <div className="absolute left-1/2 top-1/2 h-32 w-32 -translate-x-1/2 -translate-y-1/2 rounded-full bg-purple-500/30 blur-3xl" />
-                <div className="absolute bottom-2 right-2 h-20 w-20 rounded-full bg-indigo-400/20 blur-2xl" />
-              </div>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(168,85,247,0.35),transparent_50%)]" />
-            </div>
-            <div className="flex min-w-0 flex-1 flex-col justify-center">
-              <h3 className="mb-2 text-lg font-bold text-slate-900">
-                Real-time Inference
-              </h3>
-              <p className="mb-3 text-sm leading-relaxed text-slate-600">
-                Our engine uses WebGL to render million-parameter models directly
-                in your browser at 60fps.
-              </p>
-              <a
-                href="#"
-                className="w-fit text-sm font-medium text-purple-600 underline decoration-purple-600 underline-offset-2 hover:text-purple-700"
-              >
-                Read Technical Specs
-              </a>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center justify-center rounded-2xl bg-slate-100/90 px-6 py-10 ring-1 ring-slate-200/60 md:py-12">
-            <p className="text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
-              5+
-            </p>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-widest text-slate-500">
-              PRE-TRAINED MODELS
-            </p>
-          </div>
-        </div>
-      </main>
-
-      <AppFooter />
-    </div>
-  )
-}
-
-function LearnView({ onNavigate }) {
-  return (
-    <div
-      className="flex min-h-screen flex-col bg-slate-50 text-slate-800 antialiased"
-      style={fontStyle}
-    >
-      <MainNav
-        active="learn"
-        onNavigate={onNavigate}
-        searchPlaceholder="Search concept..."
-      />
-
-      <main className="mx-auto max-w-6xl flex-1 px-6 pb-20 pt-10 lg:px-8 lg:pt-14">
-        <header className="mb-10 max-w-3xl">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-200/60 bg-gradient-to-r from-purple-50 to-indigo-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-purple-700 shadow-sm">
-            <span
-              className="h-1.5 w-1.5 shrink-0 rounded-full bg-purple-600"
-              aria-hidden
-            />
-            Beginner Friendly
-          </div>
-          <h1 className="mb-3 text-3xl font-bold tracking-tight text-slate-900 md:text-4xl lg:text-5xl">
-            Learn Neural Networks
-          </h1>
-          <p className="text-lg text-slate-600 md:text-xl">
-            Understand models visually and interactively
-          </p>
-        </header>
-
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,260px)] lg:items-start lg:gap-12">
-          <div className="min-w-0 space-y-12">
-            <section aria-labelledby="models-heading">
-              <h2 id="models-heading" className="sr-only">
-                Model topics
-              </h2>
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                {models.map((m) => (
-                  <article
-                    key={m.name}
-                    className="group flex flex-col rounded-xl border border-slate-100/90 bg-white p-6 shadow-md shadow-slate-200/40 ring-1 ring-slate-100 transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-purple-500/10"
-                  >
-                    <div className="mb-4 flex items-start justify-between gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-purple-600 transition group-hover:bg-purple-50">
-                        <span className="material-symbols-outlined text-[24px]">
-                          {m.icon}
-                        </span>
-                      </div>
-                      <span
-                        className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${m.difficultyClass}`}
-                      >
-                        {m.difficulty}
-                      </span>
-                    </div>
-                    <h3 className="mb-2 text-lg font-bold text-slate-900">
-                      {m.name}
-                    </h3>
-                    <p className="mb-6 flex-1 text-sm leading-relaxed text-slate-600">
-                      {m.description}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (m.name === 'Perceptron') onNavigate('perceptron');
-                        if (m.name === 'Recurrent Neural Network (RNN)') onNavigate('rnn');
-                        if (m.name === 'Long Short-Term Memory (LSTM)') onNavigate('lstm');
-                        if (m.name === 'Convolutional Neural Network (CNN)') onNavigate('cnn');
-                        if (m.name === 'Multi-Layer Perceptron (MLP)') onNavigate('mlp');
-                        if (m.name === 'Hopfield Network') onNavigate('hopfield');
-                      }}
-                      className="mt-auto inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 py-3 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-purple-500 hover:shadow-lg hover:shadow-purple-500/30"
-                    >
-                      Start Learning
-                      <span className="material-symbols-outlined text-[18px]">
-                        school
-                      </span>
-                    </button>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section
-              aria-labelledby="visual-heading"
-              className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-8 shadow-lg shadow-slate-200/50 ring-1 ring-slate-100 md:p-10"
-            >
-              <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
-                <div className="min-w-0 flex-1">
-                  <h2
-                    id="visual-heading"
-                    className="mb-3 text-xl font-bold text-slate-900 md:text-2xl"
-                  >
-                    See how data flows through neurons in real-time
-                  </h2>
-                  <p className="mb-6 text-sm leading-relaxed text-slate-600 md:text-base">
-                    Open the visualizer to watch activations, weights, and
-                    gradients update as you step through a network—no install
-                    required.
-                  </p>
-                  <button
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-500 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-purple-500/30 transition hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/40"
-                  >
-                    Launch Visualizer
-                    <span className="material-symbols-outlined text-[20px]">
-                      play_circle
-                    </span>
-                  </button>
-                </div>
-                <div
-                  className="relative h-48 w-full shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-indigo-950 to-purple-900 shadow-inner lg:h-56 lg:w-[320px]"
-                  aria-hidden
-                >
-                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgba(129,140,248,0.45),transparent_55%)]" />
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.35),transparent_45%)]" />
-                  <div className="absolute left-1/2 top-1/2 flex h-28 w-28 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">
-                    <span className="material-symbols-outlined text-5xl text-purple-200/90">
-                      hub
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <aside className="lg:sticky lg:top-28">
-            <div className="rounded-xl border border-slate-100 bg-white p-6 shadow-md shadow-slate-200/40 ring-1 ring-slate-100">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-purple-600">
-                Learning path
-              </p>
-              <h3 className="mb-5 text-lg font-bold text-slate-900">
-                Your roadmap
-              </h3>
-              <ol className="space-y-0">
-                {pathSteps.map((s, i) => (
-                  <li key={s.step} className="relative flex gap-4 pb-6 last:pb-0">
-                    {i < pathSteps.length - 1 ? (
-                      <div
-                        className="absolute left-[15px] top-8 h-[calc(100%-0.5rem)] w-px bg-gradient-to-b from-purple-200 to-slate-200"
-                        aria-hidden
-                      />
-                    ) : null}
-                    <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 text-xs font-bold text-white shadow-md shadow-purple-500/30">
-                      {s.step}
-                    </div>
-                    <div className="min-w-0 pt-0.5">
-                      <p className="font-semibold text-slate-900">{s.title}</p>
-                      <p className="mt-0.5 text-sm text-slate-500">{s.detail}</p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </aside>
-        </div>
-      </main>
-
-      <AppFooter />
-    </div>
-  )
-}
-
 function PerceptronView({ onNavigate }) {
   const [lr, setLr] = useState(0.1);
   const [epochs, setEpochs] = useState(10);
@@ -583,7 +100,7 @@ function PerceptronView({ onNavigate }) {
     setLoading(true);
     setTestResult(null);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/perceptron/train`, {
+      const res = await fetch("http://localhost:8000/perceptron/train", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1282,7 +799,7 @@ function RNNView({ onNavigate }) {
     setLoading(true);
     setResults(null);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/rnn/train`, {
+      const res = await fetch("http://localhost:8000/rnn/train", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1326,7 +843,7 @@ function RNNView({ onNavigate }) {
     return (
       <div className="mx-4 mb-4 relative h-32 border-l-2 border-b-2 border-slate-300 bg-slate-50">
         <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-          <polyline points={points} fill="none" stroke="#8b5cf6" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          <polyline points={points} fill="none" stroke="#f43f5e" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         </svg>
       </div>
     );
@@ -1336,7 +853,7 @@ function RNNView({ onNavigate }) {
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800 antialiased" style={fontStyle}>
       <MainNav active="learn" onNavigate={onNavigate} searchPlaceholder="Search..." />
       <main className="mx-auto max-w-5xl flex-1 px-6 pb-20 pt-10 lg:px-8">
-        <button onClick={() => onNavigate('learn')} className="mb-6 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700">
+        <button onClick={() => onNavigate('learn')} className="mb-6 inline-flex items-center text-sm font-medium text-rose-600 hover:text-rose-700">
           <span className="material-symbols-outlined mr-1 text-[18px]">arrow_back</span>
           Back to Models
         </button>
@@ -1365,27 +882,24 @@ function RNNView({ onNavigate }) {
               <div className="flex bg-slate-100 rounded-lg p-1">
                 <button 
                   onClick={() => handleModeChange("number")}
-                  className={`px-3 py-1 rounded text-xs font-semibold ${mode === 'number' ? 'bg-white shadow text-purple-600' : 'text-slate-500'}`}>Numeric</button>
+                  className={`px-3 py-1 rounded text-xs font-semibold ${mode === 'number' ? 'bg-white shadow text-rose-600' : 'text-slate-500'}`}>Numeric</button>
                 <button 
                   onClick={() => handleModeChange("text")}
-                  className={`px-3 py-1 rounded text-xs font-semibold ${mode === 'text' ? 'bg-white shadow text-purple-600' : 'text-slate-500'}`}>Text</button>
+                  className={`px-3 py-1 rounded text-xs font-semibold ${mode === 'text' ? 'bg-white shadow text-rose-600' : 'text-slate-500'}`}>Text</button>
               </div>
             </div>
 
-                                    <div className="flex-1 bg-slate-50 rounded border border-slate-200 p-3 overflow-y-auto max-h-40 flex flex-wrap gap-2 content-start">
+            <div className="flex-1 bg-slate-50 rounded border border-slate-200 p-3 overflow-y-auto max-h-40 flex flex-wrap gap-2 content-start">
                {data.slice(0, 50).map((d, i) => (
                  <span key={i} className="inline-block bg-white border border-slate-200 px-2.5 py-1 text-sm rounded shadow-sm text-slate-700">
                    {d}
                  </span>
                ))}
-               {data.length > 50 && (
-                 <span className="inline-block bg-white border border-slate-200 px-2.5 py-1 text-sm rounded shadow-sm text-slate-400">
-                   +{data.length - 50} more
-                 </span>
-               )}
-             </div>
+               {data.length > 50 && <span className="inline-block px-2.5 py-1 text-sm text-slate-400">... ({data.length - 50} more)</span>}
+            </div>
+
             <div className="mt-4">
-              <label className="text-sm text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition font-medium cursor-pointer inline-flex items-center">
+              <label className="text-sm text-rose-600 border border-rose-200 bg-rose-50 hover:bg-rose-100 px-4 py-2 rounded-lg transition font-medium cursor-pointer inline-flex items-center">
                 <span className="material-symbols-outlined mr-1 text-[18px]">upload_file</span>
                 Upload Sequence CSV/Text
                 <input type="file" accept=".csv,.txt" onChange={handleFileUpload} className="hidden" />
@@ -1400,22 +914,22 @@ function RNNView({ onNavigate }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Sequence Length</label>
-                <input type="number" min="2" value={seqLen} onChange={e => setSeqLen(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition shadow-sm hover:border-purple-300" />
+                <input type="number" min="2" value={seqLen} onChange={e => setSeqLen(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Hidden Units</label>
-                <input type="number" min="4" value={hiddenUnits} onChange={e => setHiddenUnits(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition shadow-sm hover:border-purple-300" />
+                <input type="number" min="4" value={hiddenUnits} onChange={e => setHiddenUnits(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Learning Rate</label>
-                <input type="number" step="0.01" value={lr} onChange={e => setLr(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition shadow-sm hover:border-purple-300" />
+                <input type="number" step="0.01" value={lr} onChange={e => setLr(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Epochs</label>
-                <input type="number" value={epochs} onChange={e => setEpochs(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition shadow-sm hover:border-purple-300" />
+                <input type="number" value={epochs} onChange={e => setEpochs(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
               </div>
             </div>
-            <button onClick={handleTrain} disabled={loading} className="mt-6 w-full rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 font-bold text-white shadow-md hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 transition">
+            <button onClick={handleTrain} disabled={loading} className="mt-6 w-full rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-3 font-bold text-white shadow-md hover:from-rose-500 hover:to-pink-500 disabled:opacity-50 transition">
               {loading ? 'Crunching Sequence...' : 'Train RNN Model'}
             </button>
           </section>
@@ -1475,7 +989,7 @@ function RNNView({ onNavigate }) {
                     {inputTokens.map((token, idx) => (
                       <div key={idx} className="flex items-center">
                         <div className={`px-4 py-2 rounded-lg font-mono font-bold text-sm transition-all duration-300 transform
-                          ${stepIdx === idx ? 'bg-purple-500 text-white shadow-lg scale-110' : 
+                          ${stepIdx === idx ? 'bg-rose-500 text-white shadow-lg scale-110' : 
                             stepIdx > idx ? 'bg-indigo-100 text-indigo-800' : 'bg-white text-slate-500 border border-slate-300'}`}>
                           {token}
                         </div>
@@ -1527,7 +1041,7 @@ function RNNView({ onNavigate }) {
                        })}
                      </div>
                      <div className="mt-4 flex gap-4 text-[10px] uppercase text-white/60 tracking-wider">
-                       <span className="flex items-center gap-1"><div className="w-3 h-3 bg-purple-500 rounded"></div> Positive Memory</span>
+                       <span className="flex items-center gap-1"><div className="w-3 h-3 bg-rose-500 rounded"></div> Positive Memory</span>
                        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-indigo-500 rounded"></div> Negative Memory</span>
                      </div>
                   </div>
@@ -1537,7 +1051,7 @@ function RNNView({ onNavigate }) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => { stopVizTimer(); setVizStep(0); startVizPlay(0, numSteps, delay); }}
-                        className="flex-1 min-w-[80px] rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-2 text-xs font-bold text-white hover:from-rose-500 transition shadow-sm"
+                        className="flex-1 min-w-[80px] rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 px-3 py-2 text-xs font-bold text-white hover:from-rose-500 transition shadow-sm"
                       >⟳ Replay Sequence</button>
 
                       {vizPlaying ? (
@@ -1657,7 +1171,7 @@ function LSTMView({ onNavigate }) {
     setLoading(true);
     setResults(null);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/lstm/train`, {
+      const res = await fetch("http://localhost:8000/lstm/train", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1701,7 +1215,7 @@ function LSTMView({ onNavigate }) {
     return (
       <div className="mx-4 mb-4 relative h-32 border-l-2 border-b-2 border-slate-300 bg-slate-50">
         <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-          <polyline points={points} fill="none" stroke="#8b5cf6" strokeWidth="2" vectorEffect="non-scaling-stroke" />
+          <polyline points={points} fill="none" stroke="#f43f5e" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         </svg>
       </div>
     );
@@ -1711,7 +1225,7 @@ function LSTMView({ onNavigate }) {
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800 antialiased" style={fontStyle}>
       <MainNav active="learn" onNavigate={onNavigate} searchPlaceholder="Search..." />
       <main className="mx-auto max-w-5xl flex-1 px-6 pb-20 pt-10 lg:px-8">
-        <button onClick={() => onNavigate('learn')} className="mb-6 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700">
+        <button onClick={() => onNavigate('learn')} className="mb-6 inline-flex items-center text-sm font-medium text-rose-600 hover:text-rose-700">
           <span className="material-symbols-outlined mr-1 text-[18px]">arrow_back</span>
           Back to Models
         </button>
@@ -1740,27 +1254,24 @@ function LSTMView({ onNavigate }) {
               <div className="flex bg-slate-100 rounded-lg p-1">
                 <button 
                   onClick={() => handleModeChange("number")}
-                  className={`px-3 py-1 rounded text-xs font-semibold ${mode === 'number' ? 'bg-white shadow text-purple-600' : 'text-slate-500'}`}>Numeric</button>
+                  className={`px-3 py-1 rounded text-xs font-semibold ${mode === 'number' ? 'bg-white shadow text-rose-600' : 'text-slate-500'}`}>Numeric</button>
                 <button 
                   onClick={() => handleModeChange("text")}
-                  className={`px-3 py-1 rounded text-xs font-semibold ${mode === 'text' ? 'bg-white shadow text-purple-600' : 'text-slate-500'}`}>Text</button>
+                  className={`px-3 py-1 rounded text-xs font-semibold ${mode === 'text' ? 'bg-white shadow text-rose-600' : 'text-slate-500'}`}>Text</button>
               </div>
             </div>
 
-                                    <div className="flex-1 bg-slate-50 rounded border border-slate-200 p-3 overflow-y-auto max-h-40 flex flex-wrap gap-2 content-start">
+            <div className="flex-1 bg-slate-50 rounded border border-slate-200 p-3 overflow-y-auto max-h-40 flex flex-wrap gap-2 content-start">
                {data.slice(0, 50).map((d, i) => (
                  <span key={i} className="inline-block bg-white border border-slate-200 px-2.5 py-1 text-sm rounded shadow-sm text-slate-700">
                    {d}
                  </span>
                ))}
-               {data.length > 50 && (
-                 <span className="inline-block bg-white border border-slate-200 px-2.5 py-1 text-sm rounded shadow-sm text-slate-400">
-                   +{data.length - 50} more
-                 </span>
-               )}
-             </div>
+               {data.length > 50 && <span className="inline-block px-2.5 py-1 text-sm text-slate-400">... ({data.length - 50} more)</span>}
+            </div>
+
             <div className="mt-4">
-              <label className="text-sm text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition font-medium cursor-pointer inline-flex items-center">
+              <label className="text-sm text-rose-600 border border-rose-200 bg-rose-50 hover:bg-rose-100 px-4 py-2 rounded-lg transition font-medium cursor-pointer inline-flex items-center">
                 <span className="material-symbols-outlined mr-1 text-[18px]">upload_file</span>
                 Upload Sequence CSV/Text
                 <input type="file" accept=".csv,.txt" onChange={handleFileUpload} className="hidden" />
@@ -1775,22 +1286,22 @@ function LSTMView({ onNavigate }) {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Sequence Length</label>
-                <input type="number" min="2" value={seqLen} onChange={e => setSeqLen(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition shadow-sm hover:border-purple-300" />
+                <input type="number" min="2" value={seqLen} onChange={e => setSeqLen(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Hidden Units</label>
-                <input type="number" min="4" value={hiddenUnits} onChange={e => setHiddenUnits(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition shadow-sm hover:border-purple-300" />
+                <input type="number" min="4" value={hiddenUnits} onChange={e => setHiddenUnits(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Learning Rate</label>
-                <input type="number" step="0.01" value={lr} onChange={e => setLr(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition shadow-sm hover:border-purple-300" />
+                <input type="number" step="0.01" value={lr} onChange={e => setLr(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700">Epochs</label>
-                <input type="number" value={epochs} onChange={e => setEpochs(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition shadow-sm hover:border-purple-300" />
+                <input type="number" value={epochs} onChange={e => setEpochs(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500" />
               </div>
             </div>
-            <button onClick={handleTrain} disabled={loading} className="mt-6 w-full rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 font-bold text-white shadow-md hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 transition">
+            <button onClick={handleTrain} disabled={loading} className="mt-6 w-full rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-3 font-bold text-white shadow-md hover:from-rose-500 hover:to-pink-500 disabled:opacity-50 transition">
               {loading ? 'Crunching Sequence...' : 'Train LSTM Model'}
             </button>
           </section>
@@ -1850,7 +1361,7 @@ function LSTMView({ onNavigate }) {
                     {inputTokens.map((token, idx) => (
                       <div key={idx} className="flex items-center">
                         <div className={`px-4 py-2 rounded-lg font-mono font-bold text-sm transition-all duration-300 transform
-                          ${stepIdx === idx ? 'bg-purple-500 text-white shadow-lg scale-110' : 
+                          ${stepIdx === idx ? 'bg-rose-500 text-white shadow-lg scale-110' : 
                             stepIdx > idx ? 'bg-indigo-100 text-indigo-800' : 'bg-white text-slate-500 border border-slate-300'}`}>
                           {token}
                         </div>
@@ -1902,7 +1413,7 @@ function LSTMView({ onNavigate }) {
                        })}
                      </div>
                      <div className="mt-4 flex gap-4 text-[10px] uppercase text-white/60 tracking-wider">
-                       <span className="flex items-center gap-1"><div className="w-3 h-3 bg-purple-500 rounded"></div> Positive Memory</span>
+                       <span className="flex items-center gap-1"><div className="w-3 h-3 bg-rose-500 rounded"></div> Positive Memory</span>
                        <span className="flex items-center gap-1"><div className="w-3 h-3 bg-indigo-500 rounded"></div> Negative Memory</span>
                      </div>
                   </div>
@@ -1912,7 +1423,7 @@ function LSTMView({ onNavigate }) {
                     <div className="flex gap-2">
                       <button
                         onClick={() => { stopVizTimer(); setVizStep(0); startVizPlay(0, numSteps, delay); }}
-                        className="flex-1 min-w-[80px] rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-2 text-xs font-bold text-white hover:from-rose-500 transition shadow-sm"
+                        className="flex-1 min-w-[80px] rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 px-3 py-2 text-xs font-bold text-white hover:from-rose-500 transition shadow-sm"
                       >⟳ Replay Sequence</button>
 
                       {vizPlaying ? (
@@ -2048,7 +1559,7 @@ function CNNView({ onNavigate }) {
         filters: parseInt(filters),
         kernel_size: parseInt(kernelSize)
       };
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/cnn/train`, {
+      const res = await fetch("http://localhost:8000/cnn/train", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -2166,7 +1677,7 @@ function CNNView({ onNavigate }) {
     if (curTrainAcc > 0 && curValAcc > 0 && isFinished) {
         if (curTrainAcc - curValAcc > 0.15) {
             health = "Overfitting ⚠️ (Val Acc lagging)";
-            healthColor = "text-purple-600";
+            healthColor = "text-rose-600";
         } else if (curValAcc >= 0.8) {
             health = "Good Generalization ✅";
             healthColor = "text-emerald-600";
@@ -2287,7 +1798,7 @@ function CNNView({ onNavigate }) {
                 <input type="number" min="2" max="7" value={kernelSize} onChange={e => setKernelSize(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm outline-none transition focus:border-amber-500 focus:ring-1 focus:ring-amber-500" />
               </div>
             </div>
-            <button onClick={handleTrain} disabled={loading || (!imagePreview)} className="mt-6 w-full rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 font-bold text-white shadow-md hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 transition">
+            <button onClick={handleTrain} disabled={loading || (!imagePreview)} className="mt-6 w-full rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 px-4 py-3 font-bold text-white shadow-md hover:from-amber-400 hover:to-orange-500 disabled:opacity-50 transition">
               {loading ? 'Processing Convolutions...' : 'Train Vision Model'}
             </button>
           </section>
@@ -2379,978 +1890,3 @@ function CNNView({ onNavigate }) {
 }
 
 
-function MLPView({ onNavigate }) {
-  const [lr, setLr] = useState(0.01);
-  const [epochs, setEpochs] = useState(100);
-  const [hiddenLayers, setHiddenLayers] = useState("16, 8");
-
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState(null);
-
-  // Dynamic column names — updated when CSV is uploaded
-  const [colNames, setColNames] = useState(['Study Hours', 'Attendance', 'Pass?']);
-
-  const [testHours, setTestHours] = useState('');
-  const [testAttendance, setTestAttendance] = useState('');
-  const [testResult, setTestResult] = useState(null);
-  const [testLoading, setTestLoading] = useState(false);
-
-  // Visualization animation state
-  const [vizEpoch, setVizEpoch] = useState(null); // current epoch index shown
-  const [vizPlaying, setVizPlaying] = useState(false);
-  const vizTimerRef = useRef(null);
-
-  // Clean up any running timer
-  const stopVizTimer = useCallback(() => {
-    if (vizTimerRef.current) {
-      clearInterval(vizTimerRef.current);
-      vizTimerRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => stopVizTimer, [stopVizTimer]);
-
-  const startVizPlay = useCallback((fromEpoch, totalEpochs, delay) => {
-    stopVizTimer();
-    setVizPlaying(true);
-    let cur = fromEpoch;
-    vizTimerRef.current = setInterval(() => {
-      cur++;
-      if (cur >= totalEpochs) {
-        clearInterval(vizTimerRef.current);
-        vizTimerRef.current = null;
-        setVizPlaying(false);
-        setVizEpoch(totalEpochs - 1);
-      } else {
-        setVizEpoch(cur);
-      }
-    }, delay);
-  }, [stopVizTimer]);
-
-  const initialData = [
-    [2, 50, 0],
-    [3, 60, 0],
-    [5, 70, 1],
-    [7, 80, 1],
-    [1, 40, 0],
-    [8, 90, 1],
-  ];
-
-  const [data, setData] = useState(initialData);
-
-  const handleManualPredict = async () => {
-    if (!testHours || !testAttendance) return;
-    setTestLoading(true);
-    setTestResult(null);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mlp/predict`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          hours: parseFloat(testHours),
-          attendance: parseFloat(testAttendance)
-        })
-      });
-      const resData = await res.json();
-      if (resData.error) {
-        alert(resData.error);
-      } else {
-        setTestResult(resData);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error predicting");
-    } finally {
-      setTestLoading(false);
-    }
-  };
-
-  const handleTrain = async () => {
-    setLoading(true);
-    try {
-      const parsedHidden = hiddenLayers.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/mlp/train`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          data: data,
-          learning_rate: parseFloat(lr),
-          epochs: parseInt(epochs),
-          hidden_layers: parsedHidden.length ? parsedHidden : [16, 8]
-        })
-      });
-      const resData = await res.json();
-      if (resData.error) {
-        alert(resData.error);
-      } else {
-        setResults(resData);
-        // Kick off visualization – auto-play with justified delay
-        setVizEpoch(0);
-        const totalEps = resData.loss_per_epoch?.length ?? 1;
-        const delay = Math.max(300, Math.min(1200, Math.round(8000 / totalEps)));
-        startVizPlay(0, totalEps, delay);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error connecting to backend");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDownload = () => {
-    const csvContent = "data:text/csv;charset=utf-8," + colNames.join(',') + "\n" + data.map(e => e.join(",")).join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "mlp_data.csv");
-    document.body.appendChild(link);
-    link.click();
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      const text = evt.target.result;
-      const lines = text.split('\n').filter(l => l.trim() !== '');
-      if (lines.length < 2) return;
-
-      const headers = lines[0].split(',').map(h => h.trim());
-      if (headers.length >= 3) {
-        setColNames([headers[0], headers[1], headers[2]]);
-      }
-
-      const parsedData = [];
-      for (let i = 1; i < lines.length; i++) { // skip header
-        const parts = lines[i].split(',');
-        if (parts.length >= 3) {
-          const v1 = parseFloat(parts[0]);
-          const v2 = parseFloat(parts[1]);
-          const label = parseInt(parts[2]);
-          if (!isNaN(v1) && !isNaN(v2) && !isNaN(label)) {
-            parsedData.push([v1, v2, label]);
-          }
-        }
-      }
-      if (parsedData.length > 0) {
-        setData(parsedData);
-        setResults(null);
-        setTestResult(null);
-        setTestHours('');
-        setTestAttendance('');
-      }
-    };
-    reader.readAsText(file);
-  };
-
-  const renderGraph = () => {
-    if (!results || !results.loss_per_epoch || results.loss_per_epoch.length === 0) return null;
-    const maxLoss = Math.max(...results.loss_per_epoch, 0.001);
-    const points = results.loss_per_epoch.map((loss, idx) => {
-      const x = (idx / (results.loss_per_epoch.length - 1 || 1)) * 100;
-      const y = 100 - (loss / maxLoss) * 100;
-      return `${x},${y}`;
-    }).join(' ');
-
-    return (
-      <svg className="absolute inset-0 h-full w-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-        <polyline points={points} fill="none" stroke="#8b5cf6" strokeWidth="2" vectorEffect="non-scaling-stroke" />
-      </svg>
-    );
-  };
-
-  const fontStyle = { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' };
-
-  return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800 antialiased" style={fontStyle}>
-      <MainNav active="learn" onNavigate={onNavigate} searchPlaceholder="Search..." />
-      <main className="mx-auto max-w-5xl flex-1 px-6 pb-20 pt-10 lg:px-8">
-        <button onClick={() => onNavigate('learn')} className="mb-6 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700">
-          <span className="material-symbols-outlined mr-1 text-[18px]">arrow_back</span>
-          Back to Models
-        </button>
-        <h1 className="mb-8 text-3xl font-bold text-slate-900 md:text-4xl">Multi-Layer Perceptron (MLP) Learning Module</h1>
-
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* Theory Section */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-bold text-slate-900">1. How it Works (Theory)</h2>
-            <p className="mb-4 text-sm text-slate-600">
-              <strong>What is a CNN?</strong> A Convolutional Neural Network (CNN) is a deep learning model designed to recognize visual patterns. It learns spatial features like edges, textures and shapes directly from pixel data.
-            </p>
-            <h3 className="mb-2 font-semibold text-slate-800">This model classifies: 🐶 Dog vs 🐱 Cat</h3>
-            <p className="mb-3 text-sm text-slate-600">Trained on <strong>CIFAR-10</strong> — 60,000 real-world images. We use only the <strong>Cat (class 3)</strong> and <strong>Dog (class 5)</strong> subsets.</p>
-            <ul className="mb-4 list-inside list-disc text-sm text-slate-600 space-y-1">
-              <li><strong>1. Conv Layer:</strong> Scans images with learned filters — detects fur, ears, snouts.</li>
-              <li><strong>2. MaxPooling:</strong> Shrinks feature maps, keeping only strongest activations.</li>
-              <li><strong>3. Dropout:</strong> Randomly zeros neurons during training to prevent overfitting.</li>
-              <li><strong>4. Flatten + Dense:</strong> Converts 2D maps to 1D for final classification.</li>
-              <li><strong>5. Output (Softmax):</strong> Returns probability of Cat 🐱 vs Dog 🐶.</li>
-            </ul>
-             <p className="text-sm text-slate-600 mt-4">
-              Draw or upload any 32×32 image. After training, the model predicts whether it sees a Dog 🐶 or a Cat 🐱!
-            </p>
-          </section>
-
-          {/* Dataset Section */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-slate-900">2. Sample Dataset</h2>
-              <span className="text-xs font-semibold text-slate-400 bg-slate-100 rounded-full px-2.5 py-1">
-                {data.length} row{data.length !== 1 ? 's' : ''}
-              </span>
-            </div>
-            <div className="overflow-y-auto max-h-48 rounded border border-slate-200 flex-1">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-700 sticky top-0">
-                  <tr>
-                    <th className="px-3 py-2 font-semibold text-slate-400 w-8">#</th>
-                    <th className="px-4 py-2 font-semibold">{colNames[0]}</th>
-                    <th className="px-4 py-2 font-semibold">{colNames[1]}</th>
-                    <th className="px-4 py-2 font-semibold">{colNames[2]}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.slice(0, 15).map((row, i) => (
-                    <tr key={i} className="border-t border-slate-100">
-                      <td className="px-3 py-2 text-xs text-slate-400 font-mono">{i + 1}</td>
-                      <td className="px-4 py-2">{row[0]}</td>
-                      <td className="px-4 py-2">{row[1]}</td>
-                      <td className="px-4 py-2">
-                        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${row[2] ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                          {row[2] ? '1' : '0'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {data.length > 15 && (
-                    <tr className="border-t border-dashed border-slate-200 bg-slate-50">
-                      <td colSpan={4} className="px-4 py-2 text-center text-xs text-slate-400 tracking-widest font-medium">
-                        · · · {data.length - 15} more row{data.length - 15 !== 1 ? 's' : ''} hidden · · ·
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <button onClick={handleDownload} className="text-sm text-purple-600 border border-purple-200 bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg transition font-medium">
-                Download CSV
-              </button>
-              <label className="text-sm text-indigo-600 border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 px-4 py-2 rounded-lg transition font-medium cursor-pointer inline-flex items-center">
-                Upload CSV
-                <input type="file" accept=".csv" onChange={handleFileUpload} className="hidden" />
-              </label>
-            </div>
-          </section>
-
-          {/* Controls Section */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-bold text-slate-900">3. Parameters</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Learning Rate</label>
-                <input type="number" step="0.01" value={lr} onChange={e => setLr(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition" />
-              </div>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">Epochs</label>
-                <input type="number" value={epochs} onChange={e => setEpochs(e.target.value)} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition" />
-              </div>
-              <div className="col-span-2">
-                <label className="mb-1 block text-sm font-medium text-slate-700">Hidden Layers (comma separated neurons)</label>
-                <input type="text" value={hiddenLayers} onChange={e => setHiddenLayers(e.target.value)} placeholder="e.g. 16, 8" className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition" />
-              </div>
-            </div>
-            <button onClick={handleTrain} disabled={loading} className="mt-6 w-full rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-3 font-bold text-white shadow-md hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 transition">
-              {loading ? 'Training...' : 'Train MLP Model'}
-            </button>
-          </section>
-
-          {/* Graph & Results Section */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-bold text-slate-900">4. Live Epoch Graph & Output</h2>
-            {results && !results.error ? (
-              <div>
-                <div className="mb-2 flex items-center justify-between text-sm text-slate-600">
-                  <span>Epoch Loss</span>
-                  <span className="font-mono text-xs">{results.loss_per_epoch[results.loss_per_epoch.length - 1]?.toFixed(4)} final</span>
-                </div>
-                <div className="mx-4 mb-4 relative h-48 border-l-2 border-b-2 border-slate-300 bg-slate-50">
-                  {renderGraph()}
-                  <div className="absolute top-0 -left-10 text-xs text-slate-400">{Math.max(...results.loss_per_epoch).toFixed(2)}</div>
-                  <div className="absolute bottom-0 -left-6 text-xs text-slate-400">0</div>
-                </div>
-
-                {/* Result Section */}
-                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-3 text-lg font-bold text-slate-900">Model Output</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                    <div className="rounded-lg bg-purple-50 p-4 border border-purple-100 text-center shadow-inner">
-                      <p className="text-purple-600 text-xs font-semibold uppercase tracking-wider mb-1">Train Accuracy</p>
-                      <p className="text-2xl font-bold text-purple-900">{results.train_accuracy.toFixed(1)}%</p>
-                    </div>
-                    <div className="rounded-lg bg-indigo-50 p-4 border border-indigo-100 text-center shadow-inner">
-                      <p className="text-indigo-600 text-xs font-semibold uppercase tracking-wider mb-1">Test Accuracy</p>
-                      <p className="text-2xl font-bold text-indigo-900">{results.test_accuracy.toFixed(1)}%</p>
-                    </div>
-                  </div>
-                  <div className="rounded-lg bg-slate-50 p-3 border border-slate-100 shadow-inner">
-                    <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">Predictions (First few)</p>
-                    <p className="font-mono text-slate-900 break-all text-xs">
-                      [{results.predictions.slice(0, 10).join(', ')}{results.predictions.length > 10 ? ', ...' : ''}]
-                    </p>
-                  </div>
-                </div>
-
-                {/* Test Your Input Section */}
-                <div className="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="mb-3 text-lg font-bold text-slate-900">Test Your Input</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">{colNames[0]}</label>
-                      <input type="number" step="0.1" value={testHours} onChange={e => setTestHours(e.target.value)} placeholder={`Enter ${colNames[0]}`} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition" />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-sm font-medium text-slate-700">{colNames[1]}</label>
-                      <input type="number" step="0.1" value={testAttendance} onChange={e => setTestAttendance(e.target.value)} placeholder={`Enter ${colNames[1]}`} className="w-full rounded-lg border border-slate-200 bg-white text-slate-900 px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition" />
-                    </div>
-                  </div>
-                  <button onClick={handleManualPredict} disabled={testLoading} className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 font-bold text-white shadow-md hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 transition">
-                    {testLoading ? 'Predicting...' : 'Predict Result'}
-                  </button>
-                  {testResult && !testResult.error && (
-                    <div className={`mt-4 rounded-lg p-3 text-center border font-bold flex justify-between items-center ${testResult.prediction === 'Pass' || testResult.prediction === 1 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
-                      <span className="text-sm">Result: {colNames[2]} = {testResult.prediction === 'Pass' || testResult.prediction === 1 ? '1 ✅' : '0 ❌'}</span>
-                      <span className="text-xs uppercase tracking-wide opacity-80">Confidence: {(testResult.confidence * 100).toFixed(1)}%</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex h-48 items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 text-sm text-slate-400">
-                Click Train to start learning
-              </div>
-            )}
-          </section>
-
-          {/* ── Section 5: Visualization ── */}
-          <section className="col-span-1 lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-1 text-xl font-bold text-slate-900">5. Network Visualization</h2>
-            <p className="mb-6 text-sm text-slate-500">Watch the MLP network dynamically update. Due to high density, nodes are visually capped per layer.</p>
-
-            {(() => {
-              if (!results || !results.weights_per_epoch) {
-                return (
-                  <div className="flex h-56 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
-                    <span className="material-symbols-outlined mr-2 text-[20px]">play_circle</span>
-                    Train the model to see the network visualization
-                  </div>
-                );
-              }
-
-              const lpe = results.loss_per_epoch;
-              const wpe = results.weights_per_epoch;
-              const totalEpochs = lpe.length;
-              const ei = vizEpoch !== null ? Math.min(vizEpoch, totalEpochs - 1) : 0;
-              const isFinished = ei === totalEpochs - 1;
-              const loss = lpe[ei];
-              const maxLoss = Math.max(...lpe, 1);
-              const pct = Math.max(0, 100 - (loss / maxLoss) * 100);
-              const epochDelay = Math.max(300, Math.min(1200, Math.round(8000 / totalEpochs)));
-
-              // Architectural definitions
-              const inputNodes = 2;
-              const outputNodes = 1;
-              const parsedHidden = hiddenLayers.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
-              const arch = [inputNodes, ...(parsedHidden.length ? parsedHidden : [16, 8]), outputNodes];
-              
-              const MAX_DRAWN = 6;
-              const layersToDraw = arch.map(n => Math.min(n, MAX_DRAWN));
-
-              return (
-                <div className="space-y-6">
-                  <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-purple-50/30 p-4 overflow-x-auto">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Live Network — Epoch {ei + 1} / {totalEpochs}</p>
-                      {isFinished && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                          <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                          Final Model
-                        </span>
-                      )}
-                    </div>
-                    <svg viewBox="0 0 600 300" className="w-full" style={{ minHeight: 280, maxHeight: 400 }}>
-                      <defs>
-                        <filter id="glowMLP">
-                          <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                          <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                        </filter>
-                      </defs>
-                      {(() => {
-                        // Compute node coordinates
-                        const nodes = [];
-                        const colWidth = 600 / (layersToDraw.length + 1);
-                        layersToDraw.forEach((numNodes, li) => {
-                          const x = colWidth * (li + 1) - 30; // shift slightly left
-                          const ys = [];
-                          const spacing = 45;
-                          const startY = 150 - ((numNodes - 1) * spacing) / 2;
-                          for(let i=0; i<numNodes; i++) {
-                            ys.push(startY + i * spacing);
-                            nodes.push({layer: li, index: i, x, y: startY + i * spacing, total: arch[li]});
-                          }
-                        });
-
-                        // Draw edges
-                        const edges = [];
-                        for(let li=0; li<layersToDraw.length-1; li++) {
-                          const currNodes = nodes.filter(n => n.layer === li);
-                          const nextNodes = nodes.filter(n => n.layer === li + 1);
-
-                          // Attempt to extract weights if wpe length matches layers 
-                          // Keras normally returns [W1, b1, W2, b2, ...Wn, bn]
-                          // The number of W matrices is layersToDraw.length - 1
-                          let W = null;
-                          if (wpe[ei] && wpe[ei].length > (li * 2)) {
-                            W = wpe[ei][li * 2]; // Extract weight matrix for this transition
-                          }
-
-                          currNodes.forEach(cn => {
-                            nextNodes.forEach(nn => {
-                              // Get weight value if safely accessible
-                              let weightVal = 0.5; // fallback neutral
-                              if (W && W[cn.index] && W[cn.index][nn.index] !== undefined) {
-                                  weightVal = W[cn.index][nn.index];
-                              }
-                              
-                              const isPositive = weightVal > 0;
-                              const thick = Math.max(0.5, Math.min(3, Math.abs(weightVal) * 1.5));
-                              const color = isPositive ? '#8b5cf6' : '#f43f5e';
-                              const opac = Math.max(0.1, Math.min(0.8, Math.abs(weightVal)));
-
-                              const animDur = (1.5 + ((cn.index + nn.index) % 5) * 0.2) + "s";
-                              edges.push(
-                                <g key={`e-${li}-${cn.index}-${nn.index}`}>
-                                  <line x1={cn.x} y1={cn.y} x2={nn.x} y2={nn.y} stroke={color} strokeWidth={thick} strokeOpacity={opac} />
-                                  <circle r={thick * 0.8 + 1} fill={color} opacity={Math.max(0.3, opac)}>
-                                    <animate attributeName="cx" values={`${cn.x};${nn.x}`} dur={animDur} repeatCount="indefinite" />
-                                    <animate attributeName="cy" values={`${cn.y};${nn.y}`} dur={animDur} repeatCount="indefinite" />
-                                    <animate attributeName="opacity" values={`0;${Math.max(0.3, opac)};0`} dur={animDur} repeatCount="indefinite" />
-                                  </circle>
-                                </g>
-                              );
-                            });
-                          });
-                        }
-
-                        // Draw nodes
-                        const drawnNodes = nodes.map(n => {
-                          const isInput = n.layer === 0;
-                          const isOutput = n.layer === layersToDraw.length - 1;
-                          const color = isInput ? '#6366f1' : isOutput ? '#10b981' : '#a855f7';
-                          
-                          const pulseDur = (2 + (n.index % 3) * 0.5) + "s";
-                          return (
-                            <g key={`n-${n.layer}-${n.index}`}>
-                                <circle cx={n.x} cy={n.y} r={10} fill="#fff" stroke={color} strokeWidth="3" filter="url(#glowMLP)">
-                                   <animate attributeName="r" values="10;12.5;10" dur={pulseDur} repeatCount="indefinite" />
-                                   <animate attributeName="stroke-width" values="3;4;3" dur={pulseDur} repeatCount="indefinite" />
-                                </circle>
-                                {n.index === MAX_DRAWN - 1 && n.total > MAX_DRAWN && (
-                                   <text x={n.x} y={n.y + 25} textAnchor="middle" fontSize="14" fontWeight="bold" fill="#94a3b8">⋮</text>
-                                )}
-                            </g>
-                          )
-                        });
-
-                        return (
-                           <g>
-                             {edges}
-                             {drawnNodes}
-                             {/* Stats Badge */}
-                             <rect x="420" y="20" width="160" height="52" rx="6" fill="white" fillOpacity="0.9" stroke="#e2e8f0" strokeWidth="1" />
-                             <text x="500" y="40" textAnchor="middle" fontSize="10" fill="#64748b" fontWeight="600">EPOCH {ei + 1} STATS</text>
-                             <text x="500" y="55" textAnchor="middle" fontSize="10" fill="#7c3aed">Loss: {loss?.toFixed(4)}</text>
-                             <text x="500" y="68" textAnchor="middle" fontSize="9" fill={loss < 0.1 ? '#059669' : '#d97706'}>
-                                {loss < 0.1 ? '✓ Low Error' : '⚡ Updating…'}
-                             </text>
-
-                             {/* Helper text */}
-                             <text x={nodes.find(n => n.layer === 0)?.x} y="280" textAnchor="middle" fontSize="10" fill="#94a3b8" fontWeight="600">INPUTS</text>
-                             <text x={nodes.find(n => n.layer === layersToDraw.length - 1)?.x} y="280" textAnchor="middle" fontSize="10" fill="#94a3b8" fontWeight="600">OUTPUT</text>
-                           </g>
-                        );
-                      })()}
-                    </svg>
-                  </div>
-
-                  {/* Playback Controls (same as perceptron) */}
-                  <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <div className="flex flex-col gap-4">
-                      {/* ── Progress bars ── */}
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <div>
-                          <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                            <span>Epoch Progress</span>
-                            <span>{ei + 1} / {totalEpochs}</span>
-                          </div>
-                          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
-                              style={{ width: `${((ei + 1) / totalEpochs) * 100}%` }} />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                            <span>Accuracy Trend (Approx)</span>
-                            <span>{pct.toFixed(0)}%</span>
-                          </div>
-                          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-2 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-300"
-                              style={{ width: `${pct}%` }} />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* ── Button row ── */}
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => {
-                            stopVizTimer();
-                            setVizEpoch(0);
-                            startVizPlay(0, totalEpochs, epochDelay);
-                          }}
-                          className="flex-1 min-w-[80px] rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-2 text-xs font-bold text-white hover:from-purple-500 hover:to-indigo-500 transition shadow-sm"
-                        >⟳ Replay</button>
-
-                        {vizPlaying ? (
-                          <button
-                            onClick={() => { stopVizTimer(); setVizPlaying(false); }}
-                            className="flex-1 min-w-[80px] rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition"
-                          >⏸ Pause</button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              if (ei < totalEpochs - 1) startVizPlay(ei, totalEpochs, epochDelay);
-                            }}
-                            disabled={ei >= totalEpochs - 1}
-                            className="flex-1 min-w-[80px] rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-40"
-                          >▶ Continue</button>
-                        )}
-                        <button
-                          onClick={() => { stopVizTimer(); setVizPlaying(false); setVizEpoch(e => Math.max(0, (e ?? 0) - 1)); }}
-                          disabled={ei === 0}
-                          className="flex-1 min-w-[60px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 transition disabled:opacity-40"
-                        >← Prev</button>
-                        <button
-                          onClick={() => { stopVizTimer(); setVizPlaying(false); setVizEpoch(e => Math.min(totalEpochs - 1, (e ?? 0) + 1)); }}
-                          disabled={ei >= totalEpochs - 1}
-                          className="flex-1 min-w-[60px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 transition disabled:opacity-40"
-                        >Next →</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </section>
-
-        </div>
-      </main>
-      <AppFooter />
-    </div>
-  );
-}
-
-
-function HopfieldView({ onNavigate }) {
-  const GRID_SIZE = 10;
-  const fontStyle = { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' };
-
-  const [grid, setGrid] = useState(Array(GRID_SIZE * GRID_SIZE).fill(0));
-  const [recalledGrid, setRecalledGrid] = useState(null);
-  
-  // Model Training variables
-  const [loading, setLoading] = useState(false);
-  const [storedPatternsCount, setStoredPatternsCount] = useState(0);
-
-  // Visualization variables
-  const [vizStates, setVizStates] = useState(null);
-  const [vizEnergies, setVizEnergies] = useState(null);
-  const [vizIter, setVizIter] = useState(null);
-  const [vizPlaying, setVizPlaying] = useState(false);
-  const vizTimerRef = useRef(null);
-
-  const stopVizTimer = useCallback(() => {
-    if (vizTimerRef.current) {
-      clearInterval(vizTimerRef.current);
-      vizTimerRef.current = null;
-    }
-  }, []);
-
-  useEffect(() => stopVizTimer, [stopVizTimer]);
-
-  const startVizPlay = useCallback((fromIter, totalIters, delay) => {
-    stopVizTimer();
-    setVizPlaying(true);
-    let cur = fromIter;
-    vizTimerRef.current = setInterval(() => {
-      cur++;
-      if (cur >= totalIters) {
-        clearInterval(vizTimerRef.current);
-        vizTimerRef.current = null;
-        setVizPlaying(false);
-        setVizIter(totalIters - 1);
-      } else {
-        setVizIter(cur);
-      }
-    }, delay);
-  }, [stopVizTimer]);
-
-  const toggleCell = (i) => {
-    const newGrid = [...grid];
-    newGrid[i] = newGrid[i] === 0 ? 1 : 0;
-    setGrid(newGrid);
-  };
-
-  const clearCanvas = () => {
-    setGrid(Array(GRID_SIZE * GRID_SIZE).fill(0));
-    setRecalledGrid(null);
-    setVizStates(null);
-    setVizEnergies(null);
-    setVizIter(0);
-    stopVizTimer();
-    setVizPlaying(false);
-  };
-
-  const addNoise = () => {
-    const noiseLevel = 0.15;
-    const newGrid = grid.map((val) =>
-      Math.random() < noiseLevel ? (val === 0 ? 1 : 0) : val
-    );
-    setGrid(newGrid);
-  };
-
-  const drawSmiley = () => {
-    const s = Array(GRID_SIZE * GRID_SIZE).fill(0);
-    const setPx = (r, c) => { s[r * 10 + c] = 1; };
-    setPx(2, 2); setPx(2, 3); setPx(2, 6); setPx(2, 7); // Eyes
-    setPx(3, 2); setPx(3, 3); setPx(3, 6); setPx(3, 7); // Eyes
-    setPx(7, 2); setPx(8, 3); setPx(8, 4); setPx(8, 5); setPx(8, 6); setPx(7, 7); // Smile
-    setGrid(s);
-  };
-
-  const storePatterns = async () => {
-    setLoading(true);
-    const userPattern = [...Array(10)].map((_, i) =>
-      grid.slice(i * 10, (i + 1) * 10)
-    );
-
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/hopfield/store`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          patterns: [userPattern],
-        }),
-      });
-
-      const data = await res.json();
-      if (!data.error) {
-        setStoredPatternsCount(count => count + 1);
-        alert(data.message || "Pattern Stored!");
-      } else {
-        alert(data.error);
-      }
-    } catch (e) {
-      alert("Error storing pattern");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const recallPattern = async () => {
-    setLoading(true);
-    const inputPattern = [...Array(10)].map((_, i) =>
-      grid.slice(i * 10, (i + 1) * 10)
-    );
-
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:8000"}/hopfield/recall`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input_pattern: inputPattern }),
-      });
-
-      const data = await res.json();
-      if (data.error) {
-        alert(data.error);
-        return;
-      }
-
-      setRecalledGrid(data.recalled_pattern.flat());
-      setVizStates(data.states_per_iteration);
-      setVizEnergies(data.energy);
-      
-      const totalIters = data.states_per_iteration.length;
-      setVizIter(0);
-      const delay = Math.max(300, Math.min(1000, 5000 / totalIters));
-      startVizPlay(0, totalIters, delay);
-      
-    } catch (err) {
-      console.error(err);
-      alert("Error recalling pattern");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderGrid = (g, onClickFn) => (
-    <div
-      className="grid gap-px border border-slate-300 w-fit p-px bg-slate-200 rounded mx-auto"
-      style={{
-        gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-      }}
-    >
-      {g.map((cell, i) => (
-        <div
-          key={i}
-          onClick={onClickFn ? () => onClickFn(i) : undefined}
-          className={`aspect-square w-6 sm:w-7 
-          ${cell === 1 ? "bg-slate-800" : "bg-white"} 
-          ${onClickFn ? "cursor-pointer hover:bg-slate-300" : ""}`}
-        />
-      ))}
-    </div>
-  );
-
-  return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-800 antialiased" style={fontStyle}>
-      <MainNav active="learn" onNavigate={onNavigate} searchPlaceholder="Search..." />
-      <main className="mx-auto max-w-5xl flex-1 px-6 pb-20 pt-10 lg:px-8">
-        <button onClick={() => onNavigate('learn')} className="mb-6 inline-flex items-center text-sm font-medium text-purple-600 hover:text-purple-700">
-          <span className="material-symbols-outlined mr-1 text-[18px]">arrow_back</span>
-          Back to Models
-        </button>
-        <h1 className="mb-8 text-3xl font-bold text-slate-900 md:text-4xl">Hopfield Network Learning Module</h1>
-
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          {/* Theory Section */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-bold text-slate-900">1. How it Works (Theory)</h2>
-            <p className="mb-4 text-sm text-slate-600">
-              <strong>What is a Hopfield Network?</strong> It acts as a biologically-inspired associative memory. Instead of outputting a simple 'yes/no' classification, it memorizes global patterns and can perfectly reconstruct them even if half the image is destroyed.
-            </p>
-            <h3 className="mb-2 font-semibold text-slate-800">Workflow:</h3>
-            <ul className="mb-4 list-inside list-disc text-sm text-slate-600 space-y-1">
-              <li><strong>1. Storage Phase:</strong> You draw a binary pattern. The network adjusts its internal weights to turn your drawing into an "energy minimum".</li>
-              <li><strong>2. Destruction:</strong> We artificially corrupt your drawing with noise.</li>
-              <li><strong>3. Recall Phase:</strong> The network "relaxes" asynchronously, flipping pixels one by one down the energy gradient until your original memory is perfectly recovered!</li>
-            </ul>
-             <p className="text-sm text-slate-500 mt-4 font-mono bg-slate-50 p-2 rounded">
-              Current Memory Capacity: {storedPatternsCount} patterns stored.
-            </p>
-          </section>
-
-          {/* Interactive Pattern Grid */}
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center">
-             <div className="w-full mb-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-900">2. Draw Database</h2>
-              <span className="text-xs font-semibold text-slate-400 bg-slate-100 rounded-full px-2.5 py-1">
-                10x10 Grid
-              </span>
-            </div>
-
-            <div className="mb-4">
-              {renderGrid(grid, toggleCell)}
-            </div>
-
-            <div className="flex flex-wrap gap-2 justify-center w-full">
-              <button 
-                onClick={drawSmiley} 
-                className="text-[11px] font-bold uppercase tracking-wider text-slate-600 border border-slate-200 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 rounded transition">
-                Smiley Stamp
-              </button>
-              <button 
-                onClick={clearCanvas} 
-                className="text-[11px] font-bold uppercase tracking-wider text-purple-600 border border-purple-200 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded transition">
-                Clear
-              </button>
-            </div>
-
-             <div className="mt-6 flex flex-col gap-3 w-full">
-               <button 
-                onClick={storePatterns} 
-                disabled={loading}
-                className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 font-bold text-white shadow hover:bg-indigo-500 disabled:opacity-50 transition">
-                [1] Store Memory
-              </button>
-              <div className="flex gap-3">
-                <button 
-                  onClick={addNoise} 
-                  className="flex-1 rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 font-bold text-amber-700 shadow-sm hover:bg-amber-100 transition">
-                  [2] Add Noise
-                </button>
-                <button 
-                  onClick={recallPattern} 
-                  disabled={loading}
-                  className="flex-1 rounded-lg bg-violet-600 px-4 py-2 font-bold text-white shadow hover:bg-violet-500 disabled:opacity-50 transition">
-                  [3] Async Recall
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* Visualization Engine */}
-          <section className="col-span-1 lg:col-span-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h2 className="mb-1 text-xl font-bold text-slate-900">3. Energy Minimization Visualization</h2>
-            <p className="mb-6 text-sm text-slate-500">Watch the network asynchronously update its neurons down the energy gradient until stability is reached.</p>
-
-            {(() => {
-              if (!vizStates || !vizEnergies) {
-                return (
-                  <div className="flex h-56 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
-                    <span className="material-symbols-outlined mr-2 text-[20px]">hub</span>
-                    Run "[3] Async Recall" to see the Hopfield convergence!
-                  </div>
-                );
-              }
-
-              const totalIters = vizStates.length;
-              const ei = vizIter !== null ? Math.min(vizIter, totalIters - 1) : 0;
-              const isFinished = ei === totalIters - 1;
-              const currentGrid = vizStates[ei].flat();
-              const energy = vizEnergies[ei];
-              const minEnergy = Math.min(...vizEnergies);
-              const maxEnergy = Math.max(...vizEnergies, 0);
-              const epochDelay = Math.max(300, Math.min(1000, 5000 / totalIters));
-              
-              // Map energy to a 0-100% progress for the timeline
-              const eRange = (maxEnergy - minEnergy) || 1;
-              const fillPct = 100 - ((energy - minEnergy) / eRange) * 100;
-
-              return (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-slate-50 rounded-xl border border-slate-200 p-6">
-                    {/* Visualizer Grid */}
-                    <div className="flex flex-col items-center">
-                      <div className="mb-3 flex justify-between w-full max-w-[280px]">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">State (Iter {ei})</span>
-                        {isFinished && <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase">Stable</span>}
-                      </div>
-                      {renderGrid(currentGrid)}
-                    </div>
-                    
-                    {/* Energy Chart / Info */}
-                    <div className="flex flex-col h-full justify-center">
-                       <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-2">Thermodynamics</h3>
-                       <div className="text-4xl font-bold font-mono text-indigo-900 mb-2">
-                         {energy.toFixed(2)}
-                       </div>
-                       <p className="text-xs text-slate-500 mb-6 font-medium">As pixels flip to match internal weights, global energy inevitably drops.</p>
-
-                       <div className="w-full bg-slate-200 rounded-full h-3 mb-1 overflow-hidden">
-                          <div className="bg-gradient-to-r from-rose-400 to-indigo-600 h-3 rounded-full transition-all duration-300" style={{ width: `${Math.max(5, fillPct)}%` }}></div>
-                       </div>
-                       <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                         <span>High Energy (Unstable)</span>
-                         <span>Low Energy (Pattern Recovered)</span>
-                       </div>
-                    </div>
-                  </div>
-
-                  {/* Playback Controls */}
-                  <div className="rounded-xl border border-slate-200 bg-white p-4">
-                    <div className="flex flex-col gap-4">
-                      {/* Progress bar */}
-                      <div>
-                        <div className="flex justify-between text-[11px] text-slate-500 mb-1">
-                          <span>Convergence Timeline</span>
-                          <span>{ei} / {totalIters - 1}</span>
-                        </div>
-                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                          <div className="h-2 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 transition-all duration-300"
-                            style={{ width: totalIters > 1 ? `${(ei / (totalIters - 1)) * 100}%` : '100%' }} />
-                        </div>
-                      </div>
-
-                      {/* Button row */}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => {
-                            stopVizTimer();
-                            setVizIter(0);
-                            startVizPlay(0, totalIters, epochDelay);
-                          }}
-                          className="flex-1 min-w-[80px] rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-2 text-xs font-bold text-white hover:from-purple-500 transition shadow-sm"
-                        >⟳ Replay</button>
-
-                        {vizPlaying ? (
-                          <button
-                            onClick={() => { stopVizTimer(); setVizPlaying(false); }}
-                            className="flex-1 min-w-[80px] rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition"
-                          >⏸ Pause</button>
-                        ) : (
-                          <button
-                            onClick={() => {
-                              if (ei < totalIters - 1) startVizPlay(ei, totalIters, epochDelay);
-                            }}
-                            disabled={ei >= totalIters - 1}
-                            className="flex-1 min-w-[80px] rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition disabled:opacity-40"
-                          >▶ Continue</button>
-                        )}
-                        <button
-                          onClick={() => { stopVizTimer(); setVizPlaying(false); setVizIter(e => Math.max(0, (e ?? 0) - 1)); }}
-                          disabled={ei === 0}
-                          className="flex-1 min-w-[60px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 transition disabled:opacity-40"
-                        >← Prev</button>
-                        <button
-                          onClick={() => { stopVizTimer(); setVizPlaying(false); setVizIter(e => Math.min(totalIters - 1, (e ?? 0) + 1)); }}
-                          disabled={ei >= totalIters - 1}
-                          className="flex-1 min-w-[60px] rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 transition disabled:opacity-40"
-                        >Next →</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })()}
-          </section>
-
-        </div>
-      </main>
-      <AppFooter />
-    </div>
-  );
-}
-
-function App() {
-  const [appView, setAppView] = useState('home')
-
-  if (appView === 'learn') {
-    return <LearnView onNavigate={setAppView} />
-  }
-  if (appView === 'perceptron') {
-    return <PerceptronView onNavigate={setAppView} />
-  }
-  if (appView === 'lstm') {
-    return <LSTMView onNavigate={setAppView} />
-  }
-  if (appView === 'rnn') {
-    return <RNNView onNavigate={setAppView} />
-  }
-  if (appView === 'cnn') {
-    return <CNNView onNavigate={setAppView} />
-  }
-  if (appView === 'mlp') {
-    return <MLPView onNavigate={setAppView} />
-  }
-  if (appView === 'hopfield') {
-    return <HopfieldView onNavigate={setAppView} />
-  }
-
-  return <HomeView onNavigate={setAppView} />
-}
-
-export default App

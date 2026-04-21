@@ -5,12 +5,12 @@ import numpy as np
 
 # NEW IMPORTS
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense
+from tensorflow.keras.layers import SimpleRNN, Dense
 from sklearn.preprocessing import MinMaxScaler
 
 router = APIRouter()
 
-class LSTMTrainRequest(BaseModel):
+class RNNTrainRequest(BaseModel):
     sequence: List[Any]
     mode: str
     learning_rate: float
@@ -20,7 +20,7 @@ class LSTMTrainRequest(BaseModel):
 
 
 @router.post("/train")
-def train_lstm(req: LSTMTrainRequest):
+def train_rnn(req: RNNTrainRequest):
     np.random.seed(42)
 
     seq = req.sequence
@@ -60,7 +60,7 @@ def train_lstm(req: LSTMTrainRequest):
         X = X.reshape((X.shape[0], X.shape[1], 1))
 
         model = Sequential([
-            LSTM(hidden_size, input_shape=(seq_len,1)),
+            SimpleRNN(hidden_size, input_shape=(seq_len,1)),
             Dense(len(vocab), activation="softmax")
         ])
 
@@ -105,9 +105,9 @@ def train_lstm(req: LSTMTrainRequest):
         # reshape for LSTM (3D)
         X = X.reshape((X.shape[0], X.shape[1], 1))
 
-        # ✅ Proper LSTM model
+        # ✅ Proper RNN model
         model = Sequential([
-            LSTM(hidden_size, activation='relu', input_shape=(seq_len,1)),
+            SimpleRNN(hidden_size, activation='relu', input_shape=(seq_len,1)),
             Dense(1)
         ])
 
@@ -132,7 +132,7 @@ def train_lstm(req: LSTMTrainRequest):
         from tensorflow.keras.models import Model
         
         # Build an intermediate model that returns sequences
-        lstm_layer_seq = LSTM(hidden_size, activation='relu', return_sequences=True, input_shape=(seq_len, 1))
+        lstm_layer_seq = SimpleRNN(hidden_size, activation='relu', return_sequences=True, input_shape=(seq_len, 1))
         seq_model = Sequential([lstm_layer_seq])
         # Transfer weights from trained LSTM layer
         seq_model.layers[0].set_weights(model.layers[0].get_weights())

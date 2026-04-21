@@ -12,157 +12,134 @@ class CNNTrainRequest(BaseModel):
     filters: int
     kernel_size: int
 
-def relu(x):
-    return np.maximum(0, x)
+# Cache the dataset to avoid repeated downloads or processing
+_cifar_cache = None
 
-def softmax(x):
-    exp_x = np.exp(x - np.max(x))
-    return exp_x / np.sum(exp_x)
+def get_mini_cifar():
+    global _cifar_cache
+    if _cifar_cache is not None:
+        return _cifar_cache
+        
+    try:
+        from tensorflow.keras.datasets import cifar10
+        (x_train, y_train), _ = cifar10.load_data()
+        
+        # CIFAR-10 labels: Cat is 3, Dog is 5
+        cat_indices = np.where(y_train == 3)[0]
+        dog_indices = np.where(y_train == 5)[0]
+        
+        # Take 300 of each
+        sample_size = 300
+        cat_samples = cat_indices[:sample_size]
+        dog_samples = dog_indices[:sample_size]
+        
+        all_indices = np.concatenate([cat_samples, dog_samples])
+        np.random.shuffle(all_indices)
+        
+        x_mini = x_train[all_indices].astype("float32") / 255.0 # shape (600, 32, 32, 3)
+        y_mini = y_train[all_indices]
+        
+        # Relabel: Cat (3) -> 0, Dog (5) -> 1
+        y_binary = np.where(y_mini == 3, 0, 1)
+        
+    except Exception as e:
+        print(f"Warning: Failed to load CIFAR-10 ({str(e)}). Using offline fallback dataset.")
+        # Fallback offline generated dataset (600 samples, 2 classes)
+        np.random.seed(42)
+        x_mini = np.random.rand(600, 32, 32, 3).astype("float32")
+        y_binary = np.random.randint(0, 2, (600, 1))
+    
+    _cifar_cache = (x_mini, y_binary)
+    return _cifar_cache
 
 @router.post("/train")
 def train_cnn(req: CNNTrainRequest):
-    # Fix 1: Properly ingest safely normalized image data from UI canvas (28x28 grayscale, 0->1 array)
+    import tensorflow as tf
+    from tensorflow.keras.models import Sequential, Model
+    from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+    from tensorflow.keras.optimizers import Adam
+    
+    # 1. Parse Image Input (Expects 32x32x3 = 3072 values)
     try:
         pixels = json.loads(req.image)
-        if len(pixels) == 28*28:
-            img_arr = np.array(pixels, dtype=float).reshape(28, 28)
+        if len(pixels) == 32 * 32 * 3:
+            img_arr = np.array(pixels, dtype=float).reshape(1, 32, 32, 3)
         else:
-            raise ValueError("Invalid array format")
-    except Exception:
-        # Debug/Fallback dummy if direct generation happens
-        img_arr = np.random.rand(28, 28)
+            raise ValueError(f"Invalid array format. Expected 3072, got {len(pixels)}")
+    except Exception as e:
+        print(f"Image parsing error: {e}")
+        img_arr = np.zeros((1, 32, 32, 3))
         
     lr = float(req.learning_rate)
-    # Fix 10: Enforce bounds to prevent UI from freezing pure Python O(N^4) logic
-    epochs = min(max(int(req.epochs), 1), 30) 
-    num_filters = min(max(int(req.filters), 1), 16)
-    k_size = int(req.kernel_size)
-    img_size = 28
+    epochs = min(max(int(req.epochs), 1), 50) 
+    num_filters = min(max(int(req.filters), 1), 32)
+    k_size = min(max(int(req.kernel_size), 2), 7)
     
-    # Model Validation Sanity Check: Binary condition that acts strictly upon image characteristics
-    mean_val = np.mean(img_arr)
-    target_class = 0 if mean_val > 0.4 else 1
+    # 2. Get Data
+    X, y = get_mini_cifar()
     
-    # He initialization for stable exploding gradients
-    np.random.seed(42)
-    W_conv = np.random.randn(num_filters, k_size, k_size) * np.sqrt(2.0 / (k_size*k_size))
-    b_conv = np.zeros((num_filters, 1))
+    # 3. Build Model (Binary Classifier)
+    model = Sequential([
+        Conv2D(num_filters, kernel_size=(k_size, k_size), activation='relu', input_shape=(32, 32, 3), name="conv1"),
+        MaxPooling2D(pool_size=(2, 2)),
+        Dropout(0.25),
+        Flatten(),
+        Dense(32, activation='relu'),
+        Dropout(0.5),
+        Dense(2, activation='softmax') # Binary: 0=Cat, 1=Dog
+    ])
     
-    out_dim = img_size - k_size + 1
-    pool_out_dim = out_dim // 2
-    flatten_size = num_filters * pool_out_dim * pool_out_dim
+    model.compile(optimizer=Adam(learning_rate=lr), 
+                  loss='sparse_categorical_crossentropy', 
+                  metrics=['accuracy'])
     
-    num_classes = 2
-    W_fc = np.random.randn(num_classes, flatten_size) * np.sqrt(2.0 / flatten_size)
-    b_fc = np.zeros((num_classes, 1))
+    # 4. Train Model
+    history = model.fit(X, y, epochs=epochs, validation_split=0.2, verbose=0)
     
-    loss_history = []
-    feature_maps = []
+    # Extract metrics
+    loss_history = history.history['loss']
+    val_loss_history = history.history['val_loss']
+    acc_history = history.history['accuracy']
+    val_acc_history = history.history['val_accuracy']
     
-    # --------- EXACT BACKPROPAGATION TRAINING LOOP ---------
-    for epoch in range(epochs):
-        
-        # Step 2: Convolution Forward Pass
-        conv_out = np.zeros((num_filters, out_dim, out_dim))
-        for f in range(num_filters):
-            for i in range(out_dim):
-                for j in range(out_dim):
-                    # Proper sliding window application logic
-                    region = img_arr[i:i+k_size, j:j+k_size]
-                    conv_out[f, i, j] = np.sum(region * W_conv[f]) + b_conv[f, 0]
-        
-        # Capture raw geometric feature map snapshot at final sweep
-        if epoch == epochs - 1:
-            for f in range(min(num_filters, 4)):
-                fm = conv_out[f]
-                # Slice upper left bounds of feature matrix exactly to (14x14)
-                fm_14 = fm[:14, :14]
-                if fm_14.shape[0] < 14 or fm_14.shape[1] < 14:
-                    pad = np.zeros((14, 14))
-                    pad[:fm_14.shape[0], :fm_14.shape[1]] = fm_14
-                    fm_14 = pad
-                feature_maps.append(fm_14.flatten().tolist())
-
-        # Step 3: Global Non-Linear Activation (ReLU)
-        relu_out = relu(conv_out)
-        
-        # Step 4: Max Pooling (2x2 bounds)
-        pool_out = np.zeros((num_filters, pool_out_dim, pool_out_dim))
-        
-        # Max Indices required to correctly backpropagate spatial mapping gradients
-        max_idx = np.zeros((num_filters, pool_out_dim, pool_out_dim, 2), dtype=int)
-        
-        for f in range(num_filters):
-            for i in range(pool_out_dim):
-                for j in range(pool_out_dim):
-                    r_start, c_start = i*2, j*2
-                    region = relu_out[f, r_start:r_start+2, c_start:c_start+2]
-                    pool_out[f, i, j] = np.max(region)
-                    
-                    # Log where exactly the highest pixel was derived from
-                    flat_idx = np.argmax(region)
-                    max_idx[f, i, j] = [r_start + (flat_idx // 2), c_start + (flat_idx % 2)]
-                    
-        # Step 5: Flattening layer sequence
-        flat_out = pool_out.flatten().reshape(-1, 1)
-        
-        # Step 6: Fully Connected Linear Combination
-        logits = np.dot(W_fc, flat_out) + b_fc
-        
-        # Step 7: Classification Activation (Softmax bounds)
-        probs = softmax(logits)
-        
-        # Step 8: Standard Cross-Entropy Logarithmic Loss
-        loss = -np.log(probs[target_class, 0] + 1e-8)
-        loss_history.append(float(loss))
-        
-        # ========= BACKPROPAGATION START =========
-        
-        # Step 9A: Softmax spatial gradient matching logic
-        d_logits = probs.copy()
-        d_logits[target_class, 0] -= 1
-        
-        # Step 9B: Fully Connected Back-propagation
-        dW_fc = np.dot(d_logits, flat_out.T)
-        db_fc = d_logits
-        
-        # Unroll linear dimensions back to volume tensors
-        d_flat = np.dot(W_fc.T, d_logits)
-        d_pool = d_flat.reshape((num_filters, pool_out_dim, pool_out_dim))
-        
-        # Step 9C: Pooling layer gradients (Applying zero diff back except to specific max_idx traces)
-        d_relu = np.zeros_like(relu_out)
-        for f in range(num_filters):
-            for i in range(pool_out_dim):
-                for j in range(pool_out_dim):
-                    max_r, max_c = max_idx[f, i, j]
-                    d_relu[f, max_r, max_c] = d_pool[f, i, j]
-                    
-        # Step 9D: Reverse ReLU logic
-        d_conv = d_relu * (conv_out > 0)
-        
-        # Step 9E: Convolutions window chain rule integration
-        dW_conv = np.zeros_like(W_conv)
-        db_conv = np.zeros_like(b_conv)
-        
-        for f in range(num_filters):
-            db_conv[f, 0] = np.sum(d_conv[f])
-            for i in range(out_dim):
-                for j in range(out_dim):
-                    dW_conv[f] += img_arr[i:i+k_size, j:j+k_size] * d_conv[f, i, j]
-        
-        # Step 11: Safety Parameter (Gradient Clipping prevents geometric NaN generation)
-        W_fc -= lr * np.clip(dW_fc, -1.0, 1.0)
-        b_fc -= lr * np.clip(db_fc, -1.0, 1.0)
-        W_conv -= lr * np.clip(dW_conv, -1.0, 1.0)
-        b_conv -= lr * np.clip(db_conv, -1.0, 1.0)
-        
-    classes = ["Bright/Flat Motif 🟢", "Dark/Textured Motif 🟣"]
+    # 5. Predict on User Input
+    probs = model.predict(img_arr, verbose=0)[0]
     pred_idx = int(np.argmax(probs))
+    confidence = float(probs[pred_idx] * 100)
+    class_name = "Dog 🐶" if pred_idx == 1 else "Cat 🐱"
+    
+    # 6. Extract Feature Maps and Filters
+    conv_layer = model.get_layer("conv1")
+    weights, biases = conv_layer.get_weights() # weights shape: (k_size, k_size, 3, num_filters)
+    
+    # Build sub-model to get activations
+    activation_model = Model(inputs=model.inputs, outputs=conv_layer.output)
+    activations = activation_model.predict(img_arr, verbose=0)[0] # shape: (32-k+1, 32-k+1, num_filters)
+    
+    feature_maps = []
+    filters_extracted = []
+    
+    max_maps_to_return = min(num_filters, 4)
+    for f in range(max_maps_to_return):
+        # Extract Feature Map
+        fm = activations[:, :, f]
+        
+        # Let frontend handle the raw dimension, but for uniformity we can flatten it directly
+        # The frontend will calculate Math.sqrt to perfectly render any square activation Map!
+        feature_maps.append(fm.flatten().tolist())
+        
+        # Extract Filter (Average across 3 RGB channels to produce a 2D visualization mapped grid)
+        filt = np.mean(weights[:, :, :, f], axis=2)
+        filters_extracted.append(filt.flatten().tolist())
     
     return {
-        "prediction": classes[pred_idx],
-        "confidence": float(probs[pred_idx, 0] * 100),
-        "loss_per_epoch": loss_history,
-        "feature_maps": feature_maps
+        "prediction": class_name,
+        "confidence": confidence,
+        "loss_per_epoch": [float(v) for v in loss_history],
+        "val_loss_per_epoch": [float(v) for v in val_loss_history],
+        "acc_per_epoch": [float(v) for v in acc_history],
+        "val_acc_per_epoch": [float(v) for v in val_acc_history],
+        "feature_maps": feature_maps,
+        "filters": filters_extracted,
+        "probs": [float(v) for v in probs]
     }

@@ -78,11 +78,14 @@ def train_mlp_tf(req: TrainRequest):
     tf.random.set_seed(42)
     
     model = tf.keras.Sequential()
-    # Add L2 Regularization & Dropout to prevent extreme model overconfidence
-    model.add(tf.keras.layers.Dense(16, activation='relu', input_shape=(2,), kernel_regularizer=tf.keras.regularizers.l2(0.01)))
-    model.add(tf.keras.layers.Dropout(0.2))
-    model.add(tf.keras.layers.Dense(8, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
-    model.add(tf.keras.layers.Dropout(0.2))
+    # Dynamically build hidden layers from frontend parameter
+    hidden_layers = req.hidden_layers if req.hidden_layers else [16, 8]
+    for i, units in enumerate(hidden_layers):
+        if i == 0:
+            model.add(tf.keras.layers.Dense(units, activation='relu', input_shape=(2,), kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+        else:
+            model.add(tf.keras.layers.Dense(units, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+        model.add(tf.keras.layers.Dropout(0.2))
     model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
 
     # 5. COMPILATION
@@ -93,12 +96,24 @@ def train_mlp_tf(req: TrainRequest):
     batch_size = 4 if len(X_train) < 50 else 8
     epochs = min(req.epochs, 150)
     
+    class EpochWeightsCallback(tf.keras.callbacks.Callback):
+        def __init__(self):
+            super().__init__()
+            self.weights_per_epoch = []
+            
+        def on_epoch_end(self, epoch, logs=None):
+            w_list = [w.tolist() for w in self.model.get_weights()]
+            self.weights_per_epoch.append(w_list)
+
+    weight_cb = EpochWeightsCallback()
+    
     history = model.fit(
         X_train_scaled, y_train,
         epochs=epochs,
         batch_size=batch_size,
         validation_split=0.1,
-        verbose=0
+        verbose=0,
+        callbacks=[weight_cb]
     )
 
     # 7. EVALUATION
@@ -132,6 +147,7 @@ def train_mlp_tf(req: TrainRequest):
     model_store["weights"] = model.get_weights()
     model_store["mean"] = scaler.mean_
     model_store["scale"] = scaler.scale_
+    model_store["hidden_layers"] = req.hidden_layers if req.hidden_layers else [16, 8]
 
     # 9. GRAPH DATA & FINALIZE RESPONSE
     loss_per_epoch = history.history.get('loss', [])
@@ -142,6 +158,7 @@ def train_mlp_tf(req: TrainRequest):
         "test_accuracy": float(test_acc) * 100,
         "loss_per_epoch": [float(x) for x in loss_per_epoch],
         "val_loss_per_epoch": [float(x) for x in val_loss_per_epoch],
+        "weights_per_epoch": weight_cb.weights_per_epoch,
         "confusion_matrix": {
             "TP": int(tp),
             "TN": int(tn),
@@ -161,10 +178,13 @@ def predict_mlp_endpoint(req: PredictRequest):
         
     # Recreate architecture identically with Dropouts & L2 matching
     model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Dense(16, activation='relu', input_shape=(2,), kernel_regularizer=tf.keras.regularizers.l2(0.01)))
-    model.add(tf.keras.layers.Dropout(0.2))
-    model.add(tf.keras.layers.Dense(8, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
-    model.add(tf.keras.layers.Dropout(0.2))
+    stored_layers = model_store.get("hidden_layers", [16, 8])
+    for i, units in enumerate(stored_layers):
+        if i == 0:
+            model.add(tf.keras.layers.Dense(units, activation='relu', input_shape=(2,), kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+        else:
+            model.add(tf.keras.layers.Dense(units, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01)))
+        model.add(tf.keras.layers.Dropout(0.2))
     model.add(tf.keras.layers.Dense(1, activation='sigmoid'))
     model.set_weights(model_store["weights"])
     

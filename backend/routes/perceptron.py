@@ -67,6 +67,8 @@ def train_perceptron(req: TrainRequest):
     epochs = min(int(req.epochs), 50) # Limit epochs (max 50)
     
     loss_per_epoch = []
+    weights_per_epoch = []
+    bias_per_epoch = []
     
     # Train model only on training data
     for epoch in range(epochs):
@@ -95,8 +97,10 @@ def train_perceptron(req: TrainRequest):
                 w += lr * error * x_i
                 b += lr * error
                 
-        # Store loss_per_epoch (misclassification count)
+        # Store loss and weights snapshot at end of each epoch
         loss_per_epoch.append(int(misclassifications))
+        weights_per_epoch.append(w.tolist())
+        bias_per_epoch.append(float(b))
         
         # Optional early stopping
         if misclassifications == 0:
@@ -123,6 +127,8 @@ def train_perceptron(req: TrainRequest):
         "final_weights": w.tolist(),
         "final_bias": float(b),
         "loss_per_epoch": loss_per_epoch,
+        "weights_per_epoch": weights_per_epoch,
+        "bias_per_epoch": bias_per_epoch,
         "predictions": frontend_preds.tolist(),
         
         "train_accuracy": float(train_accuracy),
